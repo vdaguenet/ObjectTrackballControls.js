@@ -2,7 +2,7 @@
  * A modified version of the TrackballControls.js control for Three.js from mrdoob's Three.js examples.
  * It allows to move only one object of your scene and zoom with the camera
  */
-THREE.ObjectTrackballControls = function ( camera, object, domElement ) {
+THREE.ObjectTrackballControls = function ( object, camera, domElement ) {
 
     var _this = this;
     var STATE = { NONE: -1, ROTATE: 0, ZOOM: 1, PAN: 2, TOUCH_ROTATE: 3, TOUCH_ZOOM_PAN: 4 };
@@ -16,9 +16,10 @@ THREE.ObjectTrackballControls = function ( camera, object, domElement ) {
     this.enabled = true;
 
     this.screen = { left: 0, top: 0, width: 0, height: 0 };
-    this.onlyMoveObject = true;
 
-    this.rotateSpeed = 0.08;
+    this.moveCamera = false;
+
+    this.rotateSpeed = 1.0;
     this.zoomSpeed = 1.2;
     this.panSpeed = 0.3;
 
@@ -28,13 +29,11 @@ THREE.ObjectTrackballControls = function ( camera, object, domElement ) {
     this.noRoll = false;
 
     this.staticMoving = false;
-    this.dynamicDampingFactor = 0.2;
-    this.dynamicObjectDampingFactor = 0.1;
+    this.dynamicCameraDampingFactor = 0.2;
+    this.dynamicObjectDampingFactor = 0.08;
 
-    this.fadeDampingFactor = 0.01;
-
-    this.minDistance = 240;
-    this.maxDistance = 10000;
+    this.minDistance = 0;
+    this.maxDistance = Infinity;
 
     // internals
 
@@ -153,17 +152,19 @@ THREE.ObjectTrackballControls = function ( camera, object, domElement ) {
 
             }
 
+
+            if( _this.moveCamera ) {
+                _eye.copy( _this.camera.position ).sub( _this.target );
+
+                vector.copy( _this.camera.up ).setLength( mouseOnBall.y )
+                vector.add( cameraUp.copy( _this.camera.up ).cross( _eye ).setLength( mouseOnBall.x ) );
+                vector.add( _eye.setLength( mouseOnBall.z ) );
+
+                return vector;
+            }
+
+
             return mouseOnBall;
-
-            // _eye.copy( _this.object.position ).sub( _this.target );
-
-            // vector.copy( _this.object.up ).setLength( mouseOnBall.y )
-            // vector.add( objectUp.copy( _this.object.up ).cross( _eye ).setLength( mouseOnBall.x ) );
-            // vector.add( _eye.setLength( mouseOnBall.z ) );
-
-            // return vector;
-
-
         };
 
     }() );
@@ -197,7 +198,7 @@ THREE.ObjectTrackballControls = function ( camera, object, domElement ) {
 
                 } else {
 
-                    quaternion.setFromAxisAngle( axis, angle * ( _this.dynamicDampingFactor - 1.0 ) );
+                    quaternion.setFromAxisAngle( axis, angle * ( _this.dynamicCameraDampingFactor - 1.0 ) );
                     _rotateStart.applyQuaternion( quaternion );
 
                 }
@@ -229,9 +230,9 @@ THREE.ObjectTrackballControls = function ( camera, object, domElement ) {
 
                 _this.object.setRotationFromQuaternion(curQuaternion);
 
-                _rotateEnd.x += ( _rotateStart.x - _rotateEnd.x ) * _this.dynamicObjectDampingFactor;
-                _rotateEnd.y += ( _rotateStart.y - _rotateEnd.y ) * _this.dynamicObjectDampingFactor;
-                _rotateEnd.z += ( _rotateStart.z - _rotateEnd.z ) * _this.dynamicObjectDampingFactor;
+                _rotateStart.x += ( _rotateEnd.x - _rotateStart.x ) * _this.dynamicObjectDampingFactor;
+                _rotateStart.y += ( _rotateEnd.y - _rotateStart.y ) * _this.dynamicObjectDampingFactor;
+                _rotateStart.z += ( _rotateEnd.z - _rotateStart.z ) * _this.dynamicObjectDampingFactor;
 
             }
         };
@@ -260,7 +261,7 @@ THREE.ObjectTrackballControls = function ( camera, object, domElement ) {
 
                 } else {
 
-                    _zoomStart.y += ( _zoomEnd.y - _zoomStart.y ) * this.dynamicDampingFactor;
+                    _zoomStart.y += ( _zoomEnd.y - _zoomStart.y ) * this.dynamicCameraDampingFactor;
 
                 }
 
@@ -296,12 +297,12 @@ THREE.ObjectTrackballControls = function ( camera, object, domElement ) {
 
                 } else {
 
-                    _panStart.add( mouseChange.subVectors( _panEnd, _panStart ).multiplyScalar( _this.dynamicDampingFactor ) );
+                    _panStart.add( mouseChange.subVectors( _panEnd, _panStart ).multiplyScalar( _this.dynamicCameraDampingFactor ) );
 
                 }
 
             }
-        }
+        };
 
     }());
 
@@ -331,8 +332,11 @@ THREE.ObjectTrackballControls = function ( camera, object, domElement ) {
 
         if ( !_this.noRotate ) {
 
-            // _this.rotateCamera();
-            _this.rotateObject();
+            if( _this.moveCamera ) {
+                _this.rotateCamera();
+            } else {
+                _this.rotateObject();
+            }
 
         }
 
@@ -392,41 +396,6 @@ THREE.ObjectTrackballControls = function ( camera, object, domElement ) {
         lastCameraPosition.copy( _this.camera.position );
         lastObjectPosition.copy( _this.object.position );
 
-    };
-
-    this.resetWithFade = function () {
-
-        _this.target.x += (_this.target0.x - _this.target.x) * _this.fadeDampingFactor;
-        _this.target.y += (_this.target0.y - _this.target.y) * _this.fadeDampingFactor;
-        _this.target.z += (_this.target0.z - _this.target.z) * _this.fadeDampingFactor;
-
-        _this.object.position.x += (_this.objectPosition0.x - _this.object.position.x) * _this.fadeDampingFactor;
-        _this.object.position.y += (_this.objectPosition0.y - _this.object.position.y) * _this.fadeDampingFactor;
-        _this.object.position.z += (_this.objectPosition0.z - _this.object.position.z) * _this.fadeDampingFactor;
-
-        _this.object.up.x += (_this.objectUp0.x - _this.object.up.x) * _this.fadeDampingFactor;
-        _this.object.up.y += (_this.objectUp0.y - _this.object.up.y) * _this.fadeDampingFactor;
-        _this.object.up.z += (_this.objectUp0.z - _this.object.up.z) * _this.fadeDampingFactor;
-
-        _this.camera.position.x += (_this.cameraPosition0.x - _this.camera.position.x) * _this.fadeDampingFactor;
-        _this.camera.position.y += (_this.cameraPosition0.y - _this.camera.position.y) * _this.fadeDampingFactor;
-        _this.camera.position.z += (_this.cameraPosition0.z - _this.camera.position.z) * _this.fadeDampingFactor;
-
-        _this.camera.up.x += (_this.cameraUp0.x - _this.camera.up.x) * _this.fadeDampingFactor;
-        _this.camera.up.y += (_this.cameraUp0.y - _this.camera.up.y) * _this.fadeDampingFactor;
-        _this.camera.up.z += (_this.cameraUp0.z - _this.camera.up.z) * _this.fadeDampingFactor;
-
-        _eye.subVectors( _this.camera.position, _this.target );
-
-        _this.camera.lookAt( _this.target );
-
-        _this.dispatchEvent( changeEvent );
-
-        lastCameraPosition.copy( _this.camera.position );
-        lastObjectPosition.copy( _this.object.position );
-
-        _state = STATE.NONE;
-        _prevState = STATE.NONE;
     };
 
     function mousedown( event ) {
