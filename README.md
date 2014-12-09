@@ -1,6 +1,6 @@
 Object Trackball Controls
 =========================
-Custom version of Three.js [TrackballControls.js](https://github.com/mrdoob/three.js/blob/master/examples/js/controls/TrackballControls.js).
+Custom version of Three.js [TrackballControls.js](https://github.com/mrdoob/three.js/blob/master/examples/js/controls/TrackballControls.js) made by [Eberhard Graether](http://egraether.com/) and [Mark Lundin](http://mark-lundin.com)
 
 It allows you to move only one object of your scene and zoom/pan with the camera
 
