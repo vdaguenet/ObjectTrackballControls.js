@@ -1,6 +1,8 @@
 var scene, camera, renderer, controls;
 var cube;
 
+var gui;
+
 (function () {
     init();
     render();
@@ -42,6 +44,20 @@ function init () {
     scene.add(spotLight);
 
     controls = new THREE.ObjectTrackballControls( cube, camera, el );
+
+    var gui = new dat.GUI();
+    gui.add(controls, 'moveCamera');
+    gui.add(controls, 'rotateSpeed', 0, 2);
+    gui.add(controls, 'zoomSpeed', 0, 2);
+    gui.add(controls, 'panSpeed', 0, 2);
+    gui.add(controls, 'noRotate');
+    gui.add(controls, 'noZoom');
+    gui.add(controls, 'noPan');
+    gui.add(controls, 'noRoll');
+    gui.add(controls, 'staticMoving');
+    gui.add(controls, 'dynamicCameraDampingFactor', 0, 1);
+    gui.add(controls, 'dynamicObjectDampingFactor', 0, 1);
+
 }
 
 function render() {
