@@ -249,7 +249,7 @@ THREE.ObjectTrackballControls = function(object, camera, domElement) {
                 angle *= _this.rotateSpeed;
                 quaternion.setFromAxisAngle(axis, angle);
 
-                curQuaternion = _this.object.quaternion;
+                var curQuaternion = _this.object.quaternion;
                 curQuaternion.multiplyQuaternions(quaternion, curQuaternion);
                 curQuaternion.normalize();
 
